@@ -1,0 +1,127 @@
+#Final project
+
+library (RODBC);
+
+dsn_driver = "IBM DB2 ODBC Driver"
+dsn_database = "bludb"            
+dsn_hostname = "54a2f15b-5c0f-46df-8954-7e38e612c2bd.c1ogj3sd0tgtu0lqde00.databases.appdomain.cloud"  
+dsn_port = "32733"               
+dsn_protocol = "TCPIP"           
+dsn_uid = "jhl82201"        
+dsn_pwd = "OSz3hmzwoZidPKHK"
+dsn_security <- "ssl"
+
+conn_path <- paste("DRIVER=",dsn_driver,
+                  ";DATABASE=",dsn_database,
+                  ";HOSTNAME=",dsn_hostname,
+                  ";PORT=",dsn_port,
+                  ";PROTOCOL=",dsn_protocol,
+                  ";UID=",dsn_uid,
+                  ";PWD=",dsn_pwd,
+                  ";SECURITY=",dsn_security,        
+                    sep="")
+conn <- odbcDriverConnect(conn_path)
+conn
+
+myschema <- "JHL82201" 
+tables <- c("CROP_DATA","FARM_PRICES", "DAILY_FX", "MONTHLY_FX")
+    df1 <- sqlQuery(conn, 
+                    "CREATE TABLE CROP_DATA (
+                                      CD_ID INTEGER NOT NULL,
+                                      YEAR DATE NOT NULL,
+                                      CROP_TYPE VARCHAR(20) NOT NULL,
+                                      GEO VARCHAR(20) NOT NULL, 
+                                      SEEDED_AREA INTEGER NOT NULL,
+                                      HARVESTED_AREA INTEGER NOT NULL,
+                                      PRODUCTION INTEGER NOT NULL,
+                                      AVG_YIELD INTEGER NOT NULL,
+                                      PRIMARY KEY (CD_ID)
+                                      )", 
+                    errors=FALSE
+                    )
+
+    if (df1 == -1){
+        cat ("An error has occurred.\n")
+        msg <- odbcGetErrMsg(conn)
+        print (msg)
+    } else {
+        cat ("Table was created successfully.\n")
+    }
+    
+        df2 <- sqlQuery(conn, "CREATE TABLE FARM_PRICES (
+                                CD_ID INTEGER NOT NULL,
+                                DATE DATE NOT NULL,
+                                CROP_TYPE VARCHAR(20) NOT NULL,
+                                GEO VARCHAR(20) NOT NULL, 
+                                PRICE_PRERMT INTEGER NOT NULL,
+                                PRIMARY KEY (CD_ID)
+                                )",
+                    errors=FALSE
+                    )
+
+    if (df2 == -1){
+        cat ("An error has occurred.\n")
+        msg <- odbcGetErrMsg(conn)
+        print (msg)
+    } else {
+        cat ("Table was created successfully.\n")
+    }
+    
+        df3 <- sqlQuery(conn, "CREATE TABLE DAILY_FX (
+                                DFX_ID INTEGER NOT NULL,
+                                DATE DATE NOT NULL, 
+                                FXUSDCAD FLOAT(6),
+                                PRIMARY KEY (DFX_ID)
+                                )",
+                    errors=FALSE
+                    )
+
+    if (df3 == -1){
+        cat ("An error has occurred.\n")
+        msg <- odbcGetErrMsg(conn)
+        print (msg)
+    } else {
+        cat ("Table was created successfully.\n")
+    }
+    
+        df4 <- sqlQuery(conn, "CREATE TABLE MONTHLY_FX (
+                                DFX_ID INTEGER NOT NULL,
+                                DATE DATE NOT NULL, 
+                                FXUSDCAD FLOAT(6),
+                                PRIMARY KEY (DFX_ID)
+                                )",
+                    errors=FALSE
+                    )
+
+    if (df4 == -1){
+        cat ("An error has occurred.\n")
+        msg <- odbcGetErrMsg(conn)
+        print (msg)
+    } else {
+        cat ("Table was created successfully.\n")
+    }
+    
+crop_df <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Annual_Crop_Data.csv', colClasses=c(YEAR="character"))
+fx_df <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Daily_FX.csv', colClasses=c(DATE="character"))
+
+head(crop_df)
+head(fx_df)
+
+farm_prices <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Monthly_Farm_Prices.csv', colClasses=c(DATE="character"))
+monthly_fx <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Monthly_FX.csv', colClasses=c(DATE="character"))
+
+head(farm_prices)
+head(monthly_fx)  
+
+crop_df <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Annual_Crop_Data.csv', colClasses=c(YEAR="character"))
+fx_df <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Daily_FX.csv', colClasses=c(DATE="character"))
+farm_prices <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Monthly_Farm_Prices.csv', colClasses=c(DATE="character"))
+monthly_fx <- read.csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-RP0203EN-SkillsNetwork/labs/Final%20Project/Monthly_FX.csv', colClasses=c(DATE="character"))
+
+sqlSave(conn, crop_df, "CROP_DATA", append=TRUE, fast=FALSE, rownames=FALSE, colnames=FALSE, verbose=FALSE)
+sqlSave(conn, fx_df, "DAILY_FX", append=TRUE, fast=FALSE, rownames=FALSE, colnames=FALSE, verbose=FALSE)
+sqlSave (conn, farm_prices, "FARM_PRICES", append=TRUE, fast=FALSE, rownames=FALSE, colnames=FALSE, verbose=FALSE)
+sqlSave (conn, monthly_fx, "MONTHLY_FX", append=TRUE, fast=FALSE, rownames=FALSE, colnames=FALSE, verbose=FALSE)
+
+
+
